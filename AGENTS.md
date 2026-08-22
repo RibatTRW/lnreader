@@ -130,3 +130,17 @@ pre-push hook runs `type-check`, so failures here will also block commits/pushes
 - If you are an AI agent opening a PR or making a commit, attribute it as
   such (e.g. a "Generated with <agent/tool name>" note in the commit
   message/PR description, and a co-author trailer if your tool supports one).
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on the fork (`RibatTRW/lnreader`); upstream `lnreader/lnreader` is read-only reference. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), created on the fork. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout: lazy `CONTEXT.md` + `docs/adr/` at the repo root; this AGENTS.md (from upstream) is the standing orientation doc. See `docs/agents/domain.md`.
