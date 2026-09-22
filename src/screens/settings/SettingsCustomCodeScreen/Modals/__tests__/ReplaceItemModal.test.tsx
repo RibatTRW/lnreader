@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
+import { render, screen, within } from '@testing-library/react-native';
 
 import ReplaceItemModal from '../ReplaceItemModal';
 
@@ -64,7 +65,7 @@ jest.mock('@components', () => {
 
 jest.mock('@legendapp/list/react-native', () => {
   const ReactModule = jest.requireActual<typeof import('react')>('react');
-  const { View } =
+  const { ScrollView } =
     jest.requireActual<typeof import('react-native')>('react-native');
 
   return {
@@ -81,10 +82,10 @@ jest.mock('@legendapp/list/react-native', () => {
         item: string | [string, string];
         index: number;
       }) => React.ReactElement;
-      style?: React.ComponentProps<typeof View>['style'];
+      style?: React.ComponentProps<typeof ScrollView>['style'];
     }) =>
       ReactModule.createElement(
-        View,
+        ScrollView,
         { testID: 'legend-list', style },
         data.map((item, index) =>
           ReactModule.createElement(
@@ -113,14 +114,20 @@ jest.mock('react-native-paper', () => {
   };
 });
 
+const expectListToFillItsContainer = () => {
+  const { style } = screen.getByTestId('legend-list').props;
+  expect(StyleSheet.flatten(style)?.flex).toBeGreaterThan(0);
+};
+
 describe('ReplaceItemModal', () => {
   it('bounds the remove list viewport so overflow entries stay reachable', () => {
     render(<ReplaceItemModal listExpanded={false} toggleList={jest.fn()} />);
 
-    expect(screen.getByTestId('legend-list')).toHaveStyle({ flex: 1 });
+    const viewport = screen.getByTestId('legend-list');
+    expectListToFillItsContainer();
 
     for (const word of mockRemoveText) {
-      expect(screen.getByText(word)).toBeTruthy();
+      expect(within(viewport).getByText(word)).toBeTruthy();
     }
   });
 
@@ -129,8 +136,10 @@ describe('ReplaceItemModal', () => {
       <ReplaceItemModal showReplace listExpanded toggleList={jest.fn()} />,
     );
 
-    expect(screen.getByTestId('legend-list')).toHaveStyle({ flex: 1 });
-    expect(screen.getByText('foo')).toBeTruthy();
-    expect(screen.getByText('bar')).toBeTruthy();
+    const viewport = screen.getByTestId('legend-list');
+    expectListToFillItsContainer();
+
+    expect(within(viewport).getByText('foo')).toBeTruthy();
+    expect(within(viewport).getByText('bar')).toBeTruthy();
   });
 });
