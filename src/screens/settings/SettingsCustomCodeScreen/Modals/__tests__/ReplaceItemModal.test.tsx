@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, ViewStyle } from 'react-native';
 import { render, screen, within } from '@testing-library/react-native';
 
 import ReplaceItemModal from '../ReplaceItemModal';
@@ -135,8 +135,23 @@ jest.mock('react-native-paper', () => {
 });
 
 const expectListToFillItsContainer = () => {
-  const { style } = screen.getByTestId('legend-list').props;
-  expect(StyleSheet.flatten(style)?.flex).toBeGreaterThan(0);
+  const list = screen.getByTestId('legend-list');
+  expect(StyleSheet.flatten(list.props.style)?.flex).toBeGreaterThan(0);
+
+  // Walk up to the host view carrying the animated numeric height: `list.parent`
+  // is the composite ScrollView impl, not the bounded container.
+  let node: typeof list | null = list;
+  let containerStyle: ViewStyle | undefined;
+  while (node) {
+    const s: ViewStyle | undefined = StyleSheet.flatten(node.props.style);
+    if (s && typeof s.height === 'number') {
+      containerStyle = s;
+      break;
+    }
+    node = node.parent;
+  }
+  expect(containerStyle?.height).toBeGreaterThan(0);
+  expect(containerStyle?.overflow).toBe('hidden');
 };
 
 describe('ReplaceItemModal', () => {
