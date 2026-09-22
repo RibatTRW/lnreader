@@ -212,6 +212,7 @@ const ReplaceItemModal = ({
           <LegendList
             recycleItems
             style={styles.list}
+            nestedScrollEnabled
             data={replaceArray}
             renderItem={({ item }) => (
               <ReplaceItem
@@ -225,6 +226,7 @@ const ReplaceItemModal = ({
           <LegendList
             recycleItems
             style={styles.list}
+            nestedScrollEnabled
             data={removeText}
             renderItem={({ item, index }) => (
               <RemoveItem

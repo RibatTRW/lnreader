@@ -1,6 +1,11 @@
 import React from 'react';
 import { StyleSheet, ViewStyle } from 'react-native';
-import { render, screen, within } from '@testing-library/react-native';
+import {
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react-native';
 
 import ReplaceItemModal from '../ReplaceItemModal';
 
@@ -93,6 +98,7 @@ jest.mock('@legendapp/list/react-native', () => {
       data,
       renderItem,
       style,
+      nestedScrollEnabled,
     }: {
       data: string[] | [string, string][];
       renderItem: ({
@@ -103,10 +109,11 @@ jest.mock('@legendapp/list/react-native', () => {
         index: number;
       }) => React.ReactElement;
       style?: React.ComponentProps<typeof ScrollView>['style'];
+      nestedScrollEnabled?: boolean;
     }) =>
       ReactModule.createElement(
         ScrollView,
-        { testID: 'legend-list', style },
+        { testID: 'legend-list', style, nestedScrollEnabled },
         data.map((item, index) =>
           ReactModule.createElement(
             ReactModule.Fragment,
@@ -154,6 +161,18 @@ const expectListToFillItsContainer = () => {
   expect(containerStyle?.overflow).toBe('hidden');
 };
 
+const expectScrollToReachTail = (tailText: string) => {
+  const viewport = screen.getByTestId('legend-list');
+  // The parent Custom Code ScrollView otherwise intercepts vertical gestures
+  // (emulator proof on PR head): without this the list never scrolls by touch.
+  expect(viewport.props.nestedScrollEnabled).toBe(true);
+
+  fireEvent.scroll(viewport, {
+    nativeEvent: { contentOffset: { y: Number.MAX_SAFE_INTEGER, x: 0 } },
+  });
+  expect(within(viewport).getByText(tailText)).toBeTruthy();
+};
+
 describe('ReplaceItemModal', () => {
   it('bounds the remove list viewport so overflow entries stay reachable', () => {
     render(<ReplaceItemModal listExpanded={false} toggleList={jest.fn()} />);
@@ -164,6 +183,7 @@ describe('ReplaceItemModal', () => {
     for (const word of mockRemoveText) {
       expect(within(viewport).getByText(word)).toBeTruthy();
     }
+    expectScrollToReachTail(mockRemoveText[mockRemoveText.length - 1]);
   });
 
   it('bounds the replace list viewport', () => {
@@ -176,5 +196,6 @@ describe('ReplaceItemModal', () => {
 
     expect(within(viewport).getByText('foo')).toBeTruthy();
     expect(within(viewport).getByText('bar')).toBeTruthy();
+    expectScrollToReachTail('bar');
   });
 });
