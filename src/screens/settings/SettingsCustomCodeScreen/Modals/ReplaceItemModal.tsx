@@ -208,6 +208,7 @@ const ReplaceItemModal = ({
         {showReplace ? (
           <LegendList
             recycleItems
+            style={styles.list}
             data={replaceArray}
             renderItem={({ item }) => (
               <ReplaceItem
@@ -220,6 +221,7 @@ const ReplaceItemModal = ({
         ) : (
           <LegendList
             recycleItems
+            style={styles.list}
             data={removeText}
             renderItem={({ item, index }) => (
               <RemoveItem
@@ -305,6 +307,9 @@ const ReplaceItemModal = ({
 export default ReplaceItemModal;
 
 const styles = StyleSheet.create({
+  list: {
+    flex: 1,
+  },
   textfield: {
     marginBottom: 16,
   },
