@@ -197,12 +197,15 @@ const ReplaceItemModal = ({
       />
       <Animated.View style={animatedListSize}>
         {arrayLength <= 3 || listExpanded ? null : (
+          // The gradient must not intercept touches: with it, a scroll gesture
+          // while collapsed expanded the list instead of scrolling it. Taps no
+          // longer expand; the chevron stays as the expand control.
           <AnimatedLinearGradient
             entering={FadeIn.duration(150)}
             exiting={FadeOut.duration(150)}
             colors={['transparent', 'transparent', theme.background]}
             style={styles.gradient}
-            onTouchEnd={() => calcListSize()}
+            pointerEvents="none"
           />
         )}
         {showReplace ? (
