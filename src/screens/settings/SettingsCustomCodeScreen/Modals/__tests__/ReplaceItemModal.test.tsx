@@ -4,6 +4,26 @@ import { render, screen, within } from '@testing-library/react-native';
 
 import ReplaceItemModal from '../ReplaceItemModal';
 
+// Mock reanimated — setUpTests in global setup may have failed.
+jest.mock('react-native-reanimated', () => {
+  const { View } = require('react-native');
+  const entering = { duration: () => ({}) };
+  return {
+    __esModule: true,
+    default: {
+      View,
+      createAnimatedComponent: (c: unknown) => c,
+    },
+    View,
+    createAnimatedComponent: (c: unknown) => c,
+    useSharedValue: (init: unknown) => ({ value: init }),
+    useAnimatedStyle: (fn: () => Record<string, unknown>) => fn(),
+    withTiming: (val: unknown) => val,
+    FadeIn: entering,
+    FadeOut: entering,
+  };
+});
+
 const mockRemoveText = Array.from({ length: 10 }, (_, i) => `word-${i}`);
 
 jest.mock('@hooks/index', () => {
