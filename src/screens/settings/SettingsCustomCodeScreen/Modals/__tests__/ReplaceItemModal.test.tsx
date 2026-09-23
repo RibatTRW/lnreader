@@ -124,12 +124,35 @@ jest.mock('@legendapp/list/react-native', () => {
 
 jest.mock('../../Components/ListItems', () => {
   const ReactModule = jest.requireActual<typeof import('react')>('react');
-  const { Text } =
+  const { Text, View } =
     jest.requireActual<typeof import('react-native')>('react-native');
   return {
     LIST_ITEM_HEIGHT: 40,
-    RemoveItem: ({ item }: { item: string }) =>
-      ReactModule.createElement(Text, null, item),
+    RemoveItem: ({
+      item,
+      index,
+      removeItem,
+      editItem,
+    }: {
+      item: string;
+      index: number;
+      removeItem: (identifier: string | number) => void;
+      editItem: (item: string[]) => void;
+    }) =>
+      ReactModule.createElement(
+        View,
+        null,
+        ReactModule.createElement(
+          Text,
+          { onPress: () => editItem([item]) },
+          item,
+        ),
+        ReactModule.createElement(
+          Text,
+          { onPress: () => removeItem(index) },
+          `delete-${item}`,
+        ),
+      ),
     ReplaceItem: () => null,
   };
 });
@@ -176,5 +199,64 @@ describe('ReplaceItemModal (remove list)', () => {
       <ReplaceItemModal listExpanded={false} toggleList={mockToggleList} />,
     );
     expect(screen.getByText('brand-new-entry')).toBeTruthy();
+  });
+
+  it('removes an entry with a fresh array reference', () => {
+    mockStore.removeText = ['existing-entry', 'doomed-entry'];
+    const view = render(
+      <ReplaceItemModal listExpanded={false} toggleList={mockToggleList} />,
+    );
+    const originalRef = mockStore.removeText;
+
+    fireEvent.press(screen.getByText('delete-doomed-entry'));
+
+    expect(mockSetChapterReaderSettings).toHaveBeenCalledTimes(1);
+    const saved = mockSetChapterReaderSettings.mock.calls[0][0]
+      .removeText as string[];
+    expect(saved).toEqual(['existing-entry']);
+    // Same stale-reference hazard as the save path: splice-then-hand-back
+    // keeps the old reference and the row never disappears.
+    expect(saved).not.toBe(originalRef);
+    expect(originalRef).toEqual(['existing-entry', 'doomed-entry']);
+
+    view.rerender(
+      <ReplaceItemModal listExpanded={false} toggleList={mockToggleList} />,
+    );
+    expect(screen.getByText('existing-entry')).toBeTruthy();
+    expect(screen.queryByText('doomed-entry')).toBeNull();
+  });
+
+  it('recovers when the edited entry is gone instead of dropping the save', () => {
+    const view = render(
+      <ReplaceItemModal listExpanded={false} toggleList={mockToggleList} />,
+    );
+
+    // Open the modal in editing mode, then the entry disappears
+    // out from under it, leaving `editing` stale.
+    fireEvent.press(screen.getByText('existing-entry'));
+    mockStore.removeText = ['unrelated-entry'];
+    view.rerender(
+      <ReplaceItemModal listExpanded={false} toggleList={mockToggleList} />,
+    );
+    const currentRef = mockStore.removeText;
+
+    fireEvent.changeText(
+      screen.getByTestId('common.textToReplace'),
+      'recovered-entry',
+    );
+    fireEvent.press(screen.getByText('Save'));
+
+    expect(mockSetChapterReaderSettings).toHaveBeenCalledTimes(1);
+    const saved = mockSetChapterReaderSettings.mock.calls[0][0]
+      .removeText as string[];
+    // The pre-guard code wrote index -1: same-length array, save silently
+    // lost. The guard falls back to the add path instead.
+    expect(saved).toEqual(['unrelated-entry', 'recovered-entry']);
+    expect(saved).not.toBe(currentRef);
+
+    view.rerender(
+      <ReplaceItemModal listExpanded={false} toggleList={mockToggleList} />,
+    );
+    expect(screen.getByText('recovered-entry')).toBeTruthy();
   });
 });

@@ -93,9 +93,12 @@ const ReplaceItemModal = ({
       replaceText[text] = replacementText;
       setSettings({ replaceText: replaceText });
     } else {
+      // editing can go stale if the entry was removed while the modal was
+      // open: findIndex then yields -1 and an index write would silently
+      // drop the save, so fall back to the add path instead.
+      const i = editing ? removeText.findIndex(v => v === editing) : -1;
       let newRemoveText: string[];
-      if (editing) {
-        const i = removeText.findIndex(v => v === editing);
+      if (i !== -1) {
         newRemoveText = [...removeText];
         newRemoveText[i] = text;
       } else if (!removeText.includes(text)) {
@@ -117,8 +120,11 @@ const ReplaceItemModal = ({
         delete replaceText[identifier];
         setSettings({ replaceText: replaceText });
       } else {
-        removeText.splice(identifier as number, 1);
-        setSettings({ removeText: removeText });
+        // Copy-on-write like save(): the list only re-renders off a new
+        // array reference, so never hand back the mutated original.
+        setSettings({
+          removeText: removeText.filter((_, index) => index !== identifier),
+        });
       }
     },
     [removeText, replaceText, setSettings, showReplace],
