@@ -147,9 +147,7 @@ describe('ReplaceItemModal (remove list)', () => {
 
     expect(screen.getByText('existing-entry')).toBeTruthy();
 
-    fireEvent.press(
-      screen.getByText('customCodeSettings.addRemoveRule'),
-    );
+    fireEvent.press(screen.getByText('customCodeSettings.addRemoveRule'));
     fireEvent.changeText(
       screen.getByTestId('customCodeSettings.removeText'),
       'brand-new-entry',
