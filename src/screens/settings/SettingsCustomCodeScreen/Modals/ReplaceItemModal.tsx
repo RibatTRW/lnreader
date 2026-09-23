@@ -63,12 +63,18 @@ const ReplaceItemModal = ({ showReplace = false }: ReplaceItemModalProps) => {
       nextReplaceText[text] = replacementText;
       setSettings({ replaceText: nextReplaceText });
     } else {
-      const nextRemoveText = [...removeText];
-      if (editing) {
-        const index = nextRemoveText.findIndex(value => value === editing);
+      // editing can go stale if the entry was removed while the modal was
+      // open: findIndex then yields -1 and an index write would silently
+      // drop the save, so fall back to the add path instead.
+      const index = editing
+        ? removeText.findIndex(value => value === editing)
+        : -1;
+      let nextRemoveText: string[];
+      if (index !== -1) {
+        nextRemoveText = [...removeText];
         nextRemoveText[index] = text;
-      } else if (!nextRemoveText.includes(text)) {
-        nextRemoveText.push(text);
+      } else if (!removeText.includes(text)) {
+        nextRemoveText = [...removeText, text];
       } else {
         setError([getString('customCodeSettings.itemAlreadyExists'), '']);
         return;
@@ -85,6 +91,8 @@ const ReplaceItemModal = ({ showReplace = false }: ReplaceItemModalProps) => {
         delete nextReplaceText[String(identifier)];
         setSettings({ replaceText: nextReplaceText });
       } else {
+        // Copy-on-write like save(): the list only re-renders off a new
+        // array reference, so never hand back the mutated original.
         setSettings({
           removeText: removeText.filter((_, index) => index !== identifier),
         });
