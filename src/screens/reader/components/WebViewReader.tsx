@@ -13,7 +13,7 @@ import { useTheme } from '@hooks/persisted';
 import { getString } from '@i18n/translations';
 
 import { getPlugin } from '@plugins/pluginManager';
-import { MMKVStorage, getMMKVObject } from '@utils/mmkv/mmkv';
+import { MMKVStorage, getMMKVObject, setMMKVObject } from '@utils/mmkv/mmkv';
 import {
   CHAPTER_GENERAL_SETTINGS,
   CHAPTER_READER_SETTINGS,
@@ -37,6 +37,11 @@ import {
   isChapterRefreshUrl,
   isPluginIssueReportUrl,
 } from '../utils/sanitizeChapterText';
+import {
+  TTS_CONTROLLER_POSITION_MESSAGE,
+  normalizeTtsControllerPosition,
+  withTtsControllerPosition,
+} from '../utils/ttsControllerPosition';
 
 export type WebViewPostEvent = {
   type: string;
@@ -437,8 +442,8 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
     chapter,
     chapterGeneralSettings,
     processedHtml,
-      customJS,
-      customCSS,
+    customJS,
+    customCSS,
     initialReaderSettings,
     novel,
     plugin,
@@ -449,31 +454,31 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
   ]);
 
   return (
-      <>
-    <WebView
-      ref={webViewRef}
-      onTouchStart={onTouchStart}
-      style={{ backgroundColor: readerSettings.theme }}
-      allowFileAccess={true}
-      originWhitelist={['*']}
-      scalesPageToFit={true}
-      showsVerticalScrollIndicator={false}
-      javaScriptEnabled={true}
-      webviewDebuggingEnabled={__DEV__}
-      onShouldStartLoadWithRequest={({ url }) => {
-        if (isPluginIssueReportUrl(url)) {
-          void Linking.openURL(url);
-          return false;
-        }
-        if (isChapterRefreshUrl(url)) {
-          refetch();
-          return false;
-        }
-        return true;
-      }}
-      onLoadEnd={() => {
-        webViewRef.current?.injectJavaScript(
-          `if (window.reader && window.reader.batteryLevel) {
+    <>
+      <WebView
+        ref={webViewRef}
+        onTouchStart={onTouchStart}
+        style={{ backgroundColor: readerSettings.theme }}
+        allowFileAccess={true}
+        originWhitelist={['*']}
+        scalesPageToFit={true}
+        showsVerticalScrollIndicator={false}
+        javaScriptEnabled={true}
+        webviewDebuggingEnabled={__DEV__}
+        onShouldStartLoadWithRequest={({ url }) => {
+          if (isPluginIssueReportUrl(url)) {
+            void Linking.openURL(url);
+            return false;
+          }
+          if (isChapterRefreshUrl(url)) {
+            refetch();
+            return false;
+          }
+          return true;
+        }}
+        onLoadEnd={() => {
+          webViewRef.current?.injectJavaScript(
+            `if (window.reader && window.reader.batteryLevel) {
             window.reader.batteryLevel.val = ${lastKnownBatteryLevel};
           }`,
           );
@@ -533,6 +538,23 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
                 },
                 toNativeTtsSettings(readerSettingsRef.current.tts),
               );
+              break;
+            }
+            case TTS_CONTROLLER_POSITION_MESSAGE: {
+              // The floating TTS button was relocated. Persist the position
+              // so the next chapter (which rebuilds the page from scratch)
+              // restores it instead of falling back to the CSS default.
+              const position = normalizeTtsControllerPosition(event.data);
+              if (position) {
+                const current =
+                  getMMKVObject<ChapterReaderSettings>(
+                    CHAPTER_READER_SETTINGS,
+                  ) ?? initialChapterReaderSettings;
+                setMMKVObject(
+                  CHAPTER_READER_SETTINGS,
+                  withTtsControllerPosition(current, position),
+                );
+              }
               break;
             }
             case 'tts-command': {
