@@ -71,6 +71,10 @@ const ReplaceItemModal = ({ showReplace = false }: ReplaceItemModalProps) => {
         : -1;
       let nextRemoveText: string[];
       if (index !== -1) {
+        if (text !== editing && removeText.includes(text)) {
+          setError([getString('customCodeSettings.itemAlreadyExists'), '']);
+          return;
+        }
         nextRemoveText = [...removeText];
         nextRemoveText[index] = text;
       } else if (!removeText.includes(text)) {

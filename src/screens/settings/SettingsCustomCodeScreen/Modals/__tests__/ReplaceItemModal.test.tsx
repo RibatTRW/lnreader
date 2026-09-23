@@ -186,6 +186,21 @@ describe('ReplaceItemModal (remove list)', () => {
     expect(screen.queryByText('doomed-entry')).toBeNull();
   });
 
+  it('rejects editing an entry to a value that already exists', () => {
+    mockStore.removeText = ['alpha-entry', 'beta-entry'];
+    render(<ReplaceItemModal />);
+
+    fireEvent.press(screen.getByText('alpha-entry'));
+    fireEvent.changeText(
+      screen.getByTestId('customCodeSettings.removeText'),
+      'beta-entry',
+    );
+    fireEvent.press(screen.getByText('common.save'));
+
+    expect(mockSetChapterReaderSettings).not.toHaveBeenCalled();
+    expect(screen.getByTestId('dialog-root')).toBeTruthy();
+  });
+
   it('recovers when the edited entry is gone instead of dropping the save', () => {
     const view = render(<ReplaceItemModal />);
 
