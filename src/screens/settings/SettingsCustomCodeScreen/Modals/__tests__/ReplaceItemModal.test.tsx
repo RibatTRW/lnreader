@@ -27,21 +27,11 @@ jest.mock('@hooks/persisted', () => ({
   }),
 }));
 
-jest.mock('@hooks/index', () => {
-  const ReactModule = jest.requireActual<typeof import('react')>('react');
-  return {
-    useBoolean: (defaultValue = false) => {
-      const [value, setValue] = ReactModule.useState(!!defaultValue);
-      return {
-        value,
-        setValue,
-        setTrue: () => setValue(true),
-        setFalse: () => setValue(false),
-        toggle: () => setValue((v: boolean) => !v),
-      };
-    },
-  };
-});
+// useBoolean is pure React state with no native dependencies, so test the real
+// hook instead of maintaining a local reimplementation that can drift.
+jest.mock('@hooks/index', () => ({
+  useBoolean: jest.requireActual('@hooks/common/useBoolean').default,
+}));
 
 jest.mock('@i18n/translations', () => ({
   getString: (key: string) => key,
