@@ -93,16 +93,18 @@ const ReplaceItemModal = ({
       replaceText[text] = replacementText;
       setSettings({ replaceText: replaceText });
     } else {
+      let newRemoveText: string[];
       if (editing) {
         const i = removeText.findIndex(v => v === editing);
-        removeText[i] = text;
+        newRemoveText = [...removeText];
+        newRemoveText[i] = text;
       } else if (!removeText.includes(text)) {
-        removeText.push(text);
+        newRemoveText = [...removeText, text];
       } else {
         setError([getString('customCodeSettings.itemAlreadyExists'), '']);
         return false;
       }
-      setSettings({ removeText: removeText });
+      setSettings({ removeText: newRemoveText });
     }
     cancel();
     modal.setFalse();
