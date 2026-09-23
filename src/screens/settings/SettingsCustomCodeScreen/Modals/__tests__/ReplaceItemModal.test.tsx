@@ -3,6 +3,7 @@ import { StyleSheet, ViewStyle } from 'react-native';
 import { render, screen, within } from '@testing-library/react-native';
 
 import ReplaceItemModal from '../ReplaceItemModal';
+import { LIST_ITEM_HEIGHT } from '../../Components/ListItems';
 
 // Mock reanimated — setUpTests in global setup may have failed.
 jest.mock('react-native-reanimated', () => {
@@ -50,7 +51,7 @@ jest.mock('@hooks/persisted', () => ({
   }),
   useChapterReaderSettings: () => ({
     setChapterReaderSettings: jest.fn(),
-    replaceText: { foo: 'bar' },
+    replaceText: { foo: 'bar', baz: 'qux' },
     removeText: mockRemoveText,
   }),
 }));
@@ -94,6 +95,8 @@ jest.mock('@legendapp/list/react-native', () => {
       renderItem,
       style,
       nestedScrollEnabled,
+      keyExtractor,
+      estimatedItemSize,
     }: {
       data: string[] | [string, string][];
       renderItem: ({
@@ -105,10 +108,21 @@ jest.mock('@legendapp/list/react-native', () => {
       }) => React.ReactElement;
       style?: React.ComponentProps<typeof ScrollView>['style'];
       nestedScrollEnabled?: boolean;
-    }) =>
-      ReactModule.createElement(
+      keyExtractor?: (item: string | [string, string], index: number) => string;
+      estimatedItemSize?: number;
+    }) => {
+      // LegendList-only props ride on the ScrollView stand-in so tests can
+      // lock them; the stand-in ignores the extras at runtime.
+      const scrollProps = {
+        testID: 'legend-list',
+        style,
+        nestedScrollEnabled,
+        keyExtractor,
+        estimatedItemSize,
+      };
+      return ReactModule.createElement(
         ScrollView,
-        { testID: 'legend-list', style, nestedScrollEnabled },
+        scrollProps,
         data.map((item, index) =>
           ReactModule.createElement(
             ReactModule.Fragment,
@@ -116,7 +130,8 @@ jest.mock('@legendapp/list/react-native', () => {
             renderItem({ item, index }),
           ),
         ),
-      ),
+      );
+    },
   };
 });
 
@@ -165,6 +180,19 @@ const expectNestedScrollEnabled = () => {
   expect(viewport.props.nestedScrollEnabled).toBe(true);
 };
 
+const expectItemLayoutContract = (items: (string | [string, string])[]) => {
+  const viewport = screen.getByTestId('legend-list');
+  // Rows are a fixed LIST_ITEM_HEIGHT, so LegendList can skip measuring.
+  expect(viewport.props.estimatedItemSize).toBe(LIST_ITEM_HEIGHT);
+  // Stable keys keep recycled rows bound to the right entry after an
+  // edit (replace keys) or a removal (remove indices shift).
+  const { keyExtractor } = viewport.props;
+  expect(typeof keyExtractor).toBe('function');
+  expect(
+    new Set(items.map((item, index) => keyExtractor(item, index))).size,
+  ).toBe(items.length);
+};
+
 describe('ReplaceItemModal', () => {
   it('bounds the remove list viewport so overflow entries stay reachable', () => {
     render(<ReplaceItemModal listExpanded={false} toggleList={jest.fn()} />);
@@ -176,6 +204,7 @@ describe('ReplaceItemModal', () => {
       expect(within(viewport).getByText(word)).toBeTruthy();
     }
     expectNestedScrollEnabled();
+    expectItemLayoutContract(mockRemoveText);
   });
 
   it('bounds the replace list viewport', () => {
@@ -188,6 +217,14 @@ describe('ReplaceItemModal', () => {
 
     expect(within(viewport).getByText('foo')).toBeTruthy();
     expect(within(viewport).getByText('bar')).toBeTruthy();
+    expect(within(viewport).getByText('baz')).toBeTruthy();
+    expect(within(viewport).getByText('qux')).toBeTruthy();
     expectNestedScrollEnabled();
+    expectItemLayoutContract([
+      ['foo', 'bar'],
+      ['baz', 'qux'],
+    ]);
+    // Content-based, not index-based: the key follows the entry, not the row.
+    expect(viewport.props.keyExtractor(['baz', 'qux'], 0)).toBe('baz');
   });
 });

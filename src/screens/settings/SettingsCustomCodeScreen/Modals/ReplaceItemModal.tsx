@@ -212,6 +212,7 @@ const ReplaceItemModal = ({
           <LegendList
             {...listProps}
             data={replaceArray}
+            keyExtractor={([match]) => match}
             renderItem={({ item }) => (
               <ReplaceItem
                 item={item}
@@ -224,6 +225,7 @@ const ReplaceItemModal = ({
           <LegendList
             {...listProps}
             data={removeText}
+            keyExtractor={item => item}
             renderItem={({ item, index }) => (
               <RemoveItem
                 item={item}
@@ -331,10 +333,12 @@ const styles = StyleSheet.create({
 });
 
 // Props shared by both lists: bounded flex sizing so overflow entries stay
-// reachable inside the height-limited container, plus nested scrolling so
-// the list wins vertical gestures from the parent ScrollView.
+// reachable inside the height-limited container, nested scrolling so the
+// list wins vertical gestures from the parent ScrollView, and the fixed
+// row height so LegendList can lay out rows without measuring them.
 const listProps = {
   recycleItems: true,
   style: styles.list,
   nestedScrollEnabled: true,
+  estimatedItemSize: LIST_ITEM_HEIGHT,
 };
