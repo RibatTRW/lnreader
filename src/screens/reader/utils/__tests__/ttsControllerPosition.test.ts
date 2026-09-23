@@ -34,12 +34,9 @@ describe('ttsControllerPosition helpers', () => {
       [{ x: NaN, y: 0 }],
       [{ x: 0.5, y: Infinity }],
       [{ x: '0.5', y: '0.5' }],
-    ])(
-      'rejects %j',
-      value => {
-        expect(normalizeTtsControllerPosition(value)).toBeUndefined();
-      },
-    );
+    ])('rejects %j', value => {
+      expect(normalizeTtsControllerPosition(value)).toBeUndefined();
+    });
   });
 
   describe('withTtsControllerPosition', () => {
