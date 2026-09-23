@@ -291,6 +291,26 @@ describe('ChapterQueries', () => {
       const chapters = await getNovelChapters(novelId);
       expect(chapters.every(c => c.unread === true)).toBe(true);
     });
+
+    it('should reset reading progress when marking all chapters unread (issue #1431)', async () => {
+      const testDb = getTestDb();
+
+      const novelId = await insertTestNovel(testDb, { inLibrary: true });
+      await insertTestChapter(testDb, novelId, {
+        unread: false,
+        progress: 96,
+      });
+      await insertTestChapter(testDb, novelId, {
+        unread: false,
+        progress: 100,
+      });
+
+      await markAllChaptersUnread(novelId);
+
+      const chapters = await getNovelChapters(novelId);
+      expect(chapters.every(c => c.unread === true)).toBe(true);
+      expect(chapters.every(c => (c.progress ?? 0) === 0)).toBe(true);
+    });
   });
 
   describe('insertChapters', () => {
