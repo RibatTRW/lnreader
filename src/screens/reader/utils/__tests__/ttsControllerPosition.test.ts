@@ -4,37 +4,11 @@ import { runInNewContext } from 'node:vm';
 
 import {
   TTS_CONTROLLER_POSITION_MESSAGE,
-  isTtsControllerPosition,
   normalizeTtsControllerPosition,
   withTtsControllerPosition,
 } from '../ttsControllerPosition';
 
 describe('ttsControllerPosition helpers', () => {
-  describe('isTtsControllerPosition', () => {
-    it.each([
-      { x: 0, y: 0 },
-      { x: 1, y: 1 },
-      { x: 0.4472, y: 0.2517 },
-    ])('accepts %j', position => {
-      expect(isTtsControllerPosition(position)).toBe(true);
-    });
-
-    it.each([
-      ['null', null],
-      ['undefined', undefined],
-      ['a string', '0.5,0.5'],
-      ['an array', [0.5, 0.5]],
-      ['missing y', { x: 0.5 }],
-      ['NaN', { x: NaN, y: 0.5 }],
-      ['Infinity', { x: 0.5, y: Infinity }],
-      ['out of range', { x: 1.5, y: 0.5 }],
-      ['negative', { x: 0.5, y: -0.1 }],
-      ['wrong types', { x: '0.5', y: '0.5' }],
-    ])('rejects %s', (_label, value) => {
-      expect(isTtsControllerPosition(value)).toBe(false);
-    });
-  });
-
   describe('normalizeTtsControllerPosition', () => {
     it('passes valid fractions through', () => {
       expect(
@@ -49,7 +23,18 @@ describe('ttsControllerPosition helpers', () => {
       });
     });
 
-    it.each([[null], [undefined], ['left'], [42], [{ x: NaN, y: 0 }]])(
+    it.each([
+      [null],
+      [undefined],
+      ['left'],
+      [42],
+      ['0.5,0.5'],
+      [[0.5, 0.5]],
+      [{ x: 0.5 }],
+      [{ x: NaN, y: 0 }],
+      [{ x: 0.5, y: Infinity }],
+      [{ x: '0.5', y: '0.5' }],
+    ])(
       'rejects %j',
       value => {
         expect(normalizeTtsControllerPosition(value)).toBeUndefined();

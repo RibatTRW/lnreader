@@ -17,22 +17,6 @@ export interface TtsControllerPosition {
 /** `reader.post` message type the page sends after the button is relocated. */
 export const TTS_CONTROLLER_POSITION_MESSAGE = 'tts-position';
 
-const isUnitFraction = (value: unknown): value is number =>
-  typeof value === 'number' &&
-  Number.isFinite(value) &&
-  value >= 0 &&
-  value <= 1;
-
-export const isTtsControllerPosition = (
-  value: unknown,
-): value is TtsControllerPosition => {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const { x, y } = value as Record<string, unknown>;
-  return isUnitFraction(x) && isUnitFraction(y);
-};
-
 /**
  * Coerce a posted value into a storable position. Out-of-range numbers are
  * clamped into [0, 1] and rounded so storage stays tidy; anything that is not
