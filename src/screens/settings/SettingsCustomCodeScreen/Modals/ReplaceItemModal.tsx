@@ -210,9 +210,7 @@ const ReplaceItemModal = ({
         )}
         {showReplace ? (
           <LegendList
-            recycleItems
-            style={styles.list}
-            nestedScrollEnabled
+            {...listProps}
             data={replaceArray}
             renderItem={({ item }) => (
               <ReplaceItem
@@ -224,9 +222,7 @@ const ReplaceItemModal = ({
           />
         ) : (
           <LegendList
-            recycleItems
-            style={styles.list}
-            nestedScrollEnabled
+            {...listProps}
             data={removeText}
             renderItem={({ item, index }) => (
               <RemoveItem
@@ -333,3 +329,12 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
 });
+
+// Props shared by both lists: bounded flex sizing so overflow entries stay
+// reachable inside the height-limited container, plus nested scrolling so
+// the list wins vertical gestures from the parent ScrollView.
+const listProps = {
+  recycleItems: true,
+  style: styles.list,
+  nestedScrollEnabled: true,
+};
