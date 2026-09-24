@@ -136,7 +136,17 @@ describe('reader TTS traversal', () => {
       ['ATK +5', 'ATK +5'],
       ['HP 100/100', 'HP 100/100'],
       ['Tom & Jerry', 'Tom & Jerry'],
+      ['@reader', '@reader'],
+      // @ survives; the pre-existing prose-dot spacing still applies.
+      ['reader@example.com', 'reader@example. com'],
     ])('preserves meaning-bearing symbols in %s', (input, expected) => {
+      expect(tts.normalizeText(input)).toBe(expected);
+    });
+
+    it.each([
+      ['["Status"]', 'Status'],
+      ['[“Skill acquired”]', 'Skill acquired'],
+    ])('strips quotes exposed by bracket removal in %s', (input, expected) => {
       expect(tts.normalizeText(input)).toBe(expected);
     });
 
