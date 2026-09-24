@@ -117,6 +117,42 @@ describe('reader TTS traversal', () => {
     );
   });
 
+  describe('symbol stripping (issue 2063)', () => {
+    const tts = loadTtsTraversal(element('div'));
+
+    it('strips brackets from system status text but keeps the words', () => {
+      expect(tts.normalizeText('[Ding! Host has connected.]')).toBe(
+        'Ding! Host has connected.',
+      );
+    });
+
+    it('keeps a meaningful question mark in hidden-status markers', () => {
+      expect(tts.normalizeText('[?]')).toBe('?');
+    });
+
+    it('strips asterisk emphasis but keeps the word', () => {
+      expect(tts.normalizeText('*Important* announcement')).toBe(
+        'Important announcement',
+      );
+    });
+
+    it('strips bullets and decorative glyphs', () => {
+      expect(tts.normalizeText('• First item')).toBe('First item');
+      expect(tts.normalizeText('❖ ✦ ★ Chapter 12 ★ ✦ ❖')).toBe('Chapter 12');
+    });
+
+    it('folds ellipses marking hesitation or silence into a pause', () => {
+      expect(tts.normalizeText('He hesitated... then spoke.')).toBe(
+        'He hesitated… then spoke.',
+      );
+    });
+
+    it('drops symbol-only paragraphs from the queue', () => {
+      expect(tts.normalizeText('✦✦✦')).toBe('');
+      expect(tts.normalizeText('***')).toBe('');
+    });
+  });
+
   it('queues paragraphs wrapped in spans only once', () => {
     const chapter = element(
       'div',

@@ -215,7 +215,16 @@ window.tts = new (function () {
       .replace(/\s+/g, ' ')
       .trim()
       .replace(/^["'“”‘’]+|["'“”‘’]+$/g, '')
+      // Dot runs are a character's hesitation or silence: fold them into a
+      // single ellipsis so engines pause instead of saying "dot dot dot".
+      .replace(/\.{2,}/g, '…')
+      // Drop symbols engines pronounce literally (brackets, asterisks,
+      // bullets, decorative glyphs, ...). Prose punctuation (. , ! ? ; :),
+      // quotes, dashes, and word characters survive, so a [?] marker keeps
+      // its meaningful question mark while the brackets go.
+      .replace(/[^\p{L}\p{M}\p{N}\s.,!?;:…'"“”‘’\-‐‑‒–—―−⁓⸺⸻﹘﹣－]/gu, ' ')
       .replace(/\s*([.,!?;:])\s*/g, '$1 ')
+      .replace(/\s+/g, ' ')
       .trim();
 
     const dashOnlyText = normalized.replace(/\s/g, '');
