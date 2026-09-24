@@ -179,9 +179,12 @@ describe('reader TTS traversal', () => {
       ['50‱', '50‱'],
       ['5′10″', '5′10″'],
       ['HP ∞', 'HP ∞'],
-    ])('preserves sibling currencies, relations, and fullwidth math in %s', (input, expected) => {
-      expect(tts.normalizeText(input)).toBe(expected);
-    });
+    ])(
+      'preserves sibling currencies, relations, and fullwidth math in %s',
+      (input, expected) => {
+        expect(tts.normalizeText(input)).toBe(expected);
+      },
+    );
 
     it('strips asterisk emphasis but keeps the word', () => {
       expect(tts.normalizeText('*Important* announcement')).toBe(
