@@ -218,11 +218,12 @@ window.tts = new (function () {
       // Dot runs are a character's hesitation or silence: fold them into a
       // single ellipsis so engines pause instead of saying "dot dot dot".
       .replace(/\.{2,}/g, '…')
-      // Drop symbols engines pronounce literally (brackets, asterisks,
-      // bullets, decorative glyphs, ...). Prose punctuation (. , ! ? ; :),
-      // quotes, dashes, and word characters survive, so a [?] marker keeps
-      // its meaningful question mark while the brackets go.
-      .replace(/[^\p{L}\p{M}\p{N}\s.,!?;:…'"“”‘’\-‐‑‒–—―−⁓⸺⸻﹘﹣－]/gu, ' ')
+      // Drop decorative symbols engines pronounce literally (brackets,
+      // asterisks, bullets, box-drawing, ...). Glyphs that carry meaning
+      // (% $ + / & = ° § · …, CJK punctuation) survive alongside prose
+      // punctuation, quotes, dashes, and word characters, so a [?] marker
+      // keeps its meaningful question mark while the brackets go.
+      .replace(/(?![%$+/&=°§·…。、！？；：「」『』（）【】，．･.,!?;:'"“”‘’\-‐‑‒–—―−⁓⸺⸻﹘﹣－])[\p{S}\p{P}\p{C}]/gu, ' ')
       .replace(/\s*([.,!?;:])\s*/g, '$1 ')
       .replace(/\s+/g, ' ')
       .trim();

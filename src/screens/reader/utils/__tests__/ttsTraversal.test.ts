@@ -130,6 +130,28 @@ describe('reader TTS traversal', () => {
       expect(tts.normalizeText('[?]')).toBe('?');
     });
 
+    it.each([
+      ['Success rate 99%', 'Success rate 99%'],
+      ['$50', '$50'],
+      ['ATK +5', 'ATK +5'],
+      ['HP 100/100', 'HP 100/100'],
+      ['Tom & Jerry', 'Tom & Jerry'],
+    ])('preserves meaning-bearing symbols in %s', (input, expected) => {
+      expect(tts.normalizeText(input)).toBe(expected);
+    });
+
+    it('preserves CJK sentence boundaries', () => {
+      expect(tts.normalizeText('你好。再见。')).toBe('你好。再见。');
+    });
+
+    it('preserves other meaning-bearing glyphs and CJK punctuation', () => {
+      expect(tts.normalizeText('It is 36°')).toBe('It is 36°');
+      expect(tts.normalizeText('§ 12')).toBe('§ 12');
+      expect(tts.normalizeText('a · b')).toBe('a · b');
+      expect(tts.normalizeText('「你好，世界。」')).toBe('「你好，世界。」');
+      expect(tts.normalizeText('（注）【第12章】')).toBe('（注）【第12章】');
+    });
+
     it('strips asterisk emphasis but keeps the word', () => {
       expect(tts.normalizeText('*Important* announcement')).toBe(
         'Important announcement',
