@@ -152,6 +152,27 @@ describe('reader TTS traversal', () => {
       expect(tts.normalizeText('（注）【第12章】')).toBe('（注）【第12章】');
     });
 
+    it.each([
+      ['€50', '€50'],
+      ['¥5000', '¥5000'],
+      ['3×4', '3×4'],
+      ['10÷2', '10÷2'],
+      ['HP<30%', 'HP<30%'],
+      ['a>b', 'a>b'],
+      ['HP≤30%', 'HP≤30%'],
+      ['a≥b', 'a≥b'],
+      ['a≈b', 'a≈b'],
+      ['a≠b', 'a≠b'],
+      ['ATK ±5', 'ATK ±5'],
+      ['50‰', '50‰'],
+      ['５＋３', '５＋３'],
+      ['１００／１００', '１００／１００'],
+      ['５０％', '５０％'],
+      ['＆', '＆'],
+    ])('preserves sibling currencies, relations, and fullwidth math in %s', (input, expected) => {
+      expect(tts.normalizeText(input)).toBe(expected);
+    });
+
     it('strips asterisk emphasis but keeps the word', () => {
       expect(tts.normalizeText('*Important* announcement')).toBe(
         'Important announcement',

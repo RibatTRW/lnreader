@@ -223,7 +223,7 @@ window.tts = new (function () {
       // (% $ + / & = ° § · …, CJK punctuation) survive alongside prose
       // punctuation, quotes, dashes, and word characters, so a [?] marker
       // keeps its meaningful question mark while the brackets go.
-      .replace(/(?![%$+/&=°§·…。、！？；：「」『』（）【】，．･.,!?;:'"“”‘’\-‐‑‒–—―−⁓⸺⸻﹘﹣－])[\p{S}\p{P}\p{C}]/gu, ' ')
+      .replace(/(?![%$+/&=°§·…×÷<>≤≥≈≠±‰€£¥₹₩¢。、！？；：「」『』（）【】，．･＋／＝％＆＜＞.,!?;:'"“”‘’\-‐‑‒–—―−⁓⸺⸻﹘﹣－])[\p{S}\p{P}\p{C}]/gu, ' ')
       .replace(/\s*([.,!?;:])\s*/g, '$1 ')
       .replace(/\s+/g, ' ')
       .trim();
