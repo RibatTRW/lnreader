@@ -169,6 +169,16 @@ describe('reader TTS traversal', () => {
       ['１００／１００', '１００／１００'],
       ['５０％', '５０％'],
       ['＆', '＆'],
+      ['￥5000', '￥5000'],
+      ['＄50', '＄50'],
+      ['LV.10〜20', 'LV. 10〜20'],
+      ['10～20', '10～20'],
+      ['√9', '√9'],
+      ['1⁄2', '1⁄2'],
+      ['3⋅5', '3⋅5'],
+      ['50‱', '50‱'],
+      ['5′10″', '5′10″'],
+      ['HP ∞', 'HP ∞'],
     ])('preserves sibling currencies, relations, and fullwidth math in %s', (input, expected) => {
       expect(tts.normalizeText(input)).toBe(expected);
     });
