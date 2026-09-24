@@ -220,12 +220,12 @@ window.tts = new (function () {
       .replace(/\.{2,}/g, '…')
       // Drop decorative symbols engines pronounce literally (brackets,
       // asterisks, bullets, box-drawing, ...). Glyphs that carry meaning
-      // (currencies, math relations, @, ° § · … ‰ ‱ ′ ″ ∞, CJK and
+      // (currencies, math relations, @/＠, ° § · … ‰ ‱ ′ ″ ∞, CJK and
       // fullwidth punctuation) survive alongside prose punctuation,
       // quotes, dashes, and word characters, so a [?] marker keeps its
       // meaningful question mark while the brackets go.
       .replace(
-        /(?![%$+/@&=°§·…×÷<>≤≥≈≠±‰€£¥₹₩¢。、！？；：「」『』（）【】，．･＋／＝％＆＜＞￥＄〜～√⁄⋅‱′″∞.,!?;:'"“”‘’\-‐‑‒–—―−⁓⸺⸻﹘﹣－])[\p{S}\p{P}\p{C}]/gu,
+        /(?![%$+/@＠&=°§·…×÷<>≤≥≈≠±‰€£¥₹₩¢。、！？；：「」『』（）【】，．･＋／＝％＆＜＞￥＄〜～√⁄⋅‱′″∞.,!?;:'"“”‘’\-‐‑‒–—―−⁓⸺⸻﹘﹣－])[\p{S}\p{P}\p{C}]/gu,
         ' ',
       )
       .replace(/\s*([.,!?;:])\s*/g, '$1 ')

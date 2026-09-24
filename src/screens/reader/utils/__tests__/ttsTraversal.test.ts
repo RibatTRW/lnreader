@@ -137,6 +137,7 @@ describe('reader TTS traversal', () => {
       ['HP 100/100', 'HP 100/100'],
       ['Tom & Jerry', 'Tom & Jerry'],
       ['@reader', '@reader'],
+      ['ユーザー＠example', 'ユーザー＠example'],
       // @ survives; the pre-existing prose-dot spacing still applies.
       ['reader@example.com', 'reader@example. com'],
     ])('preserves meaning-bearing symbols in %s', (input, expected) => {
