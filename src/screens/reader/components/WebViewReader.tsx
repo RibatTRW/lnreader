@@ -148,6 +148,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
     saveProgress,
     activateChapter,
     loadChapterAfter,
+    getRebuildTarget,
     nextChapter,
     prevChapter,
     webViewRef,
@@ -331,8 +332,18 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
   const source = useMemo(() => {
     // eslint-disable-next-line react-hooks/refs
     const isNextChapterScreenVisible = nextChapterScreenVisible.current;
+    const rebuildTarget = getRebuildTarget();
+    const sourceChapter = rebuildTarget?.chapter ?? documentChapter;
+    const sourceHtml =
+      !rebuildTarget || rebuildTarget.chapter.id === documentChapter.id
+        ? processedHtml
+        : applyTextModifications(
+            rebuildTarget.html,
+            readerSettingsRef.current.removeText,
+            readerSettingsRef.current.replaceText,
+          );
     return {
-      baseUrl: !documentChapter.isDownloaded ? plugin?.site : undefined,
+      baseUrl: !sourceChapter.isDownloaded ? plugin?.site : undefined,
       headers: plugin?.imageRequestInit?.headers,
       method: plugin?.imageRequestInit?.method,
       body: plugin?.imageRequestInit?.body,
@@ -391,17 +402,19 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
             <body class="${
               chapterGeneralSettings.pageReader ? 'page-reader' : ''
             } ${
-        chapterGeneralSettings.pageReaderDisableAnimation ? 'no-animation' : ''
-      }">
+              chapterGeneralSettings.pageReaderDisableAnimation
+                ? 'no-animation'
+                : ''
+            }">
               <div class="transition-chapter" style="transform: ${
                 isNextChapterScreenVisible
                   ? 'translateX(-100%)'
                   : 'translateX(0%)'
               };
               ${chapterGeneralSettings.pageReader ? '' : 'display: none'}"
-              ">${documentChapter.name}</div>
+              ">${sourceChapter.name}</div>
               <div id="LNReader-chapter">
-                ${processedHtml}
+                ${sourceHtml}
               </div>
               <div id="reader-ui"></div>
               </body>
@@ -415,7 +428,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
                   readerSettings: initialReaderSettings,
                   chapterGeneralSettings,
                   novel,
-                  chapter: documentChapter,
+                  chapter: sourceChapter,
                   batteryLevel,
                   autoSaveInterval: 2222,
                   DEBUG: __DEV__,
@@ -423,7 +436,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
                     finished:
                       getString('readerScreen.finished') +
                       ': ' +
-                      documentChapter.name.trim(),
+                      sourceChapter.name.trim(),
                     noNextChapter: getString('readerScreen.noNextChapter'),
                     loadingNextChapter: getString(
                       'readerScreen.loadingNextChapter',
@@ -460,6 +473,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
   }, [
     batteryLevel,
     documentChapter,
+    getRebuildTarget,
     chapterGeneralSettings,
     processedHtml,
     customJS,
@@ -573,8 +587,7 @@ const WebViewReader: React.FC<WebViewReaderProps> = ({
           switch (event.type) {
             case 'tts-queue': {
               const payload = event.data as
-                | { queue?: unknown; startIndex?: unknown }
-                | undefined;
+                { queue?: unknown; startIndex?: unknown } | undefined;
               const queue = Array.isArray(payload?.queue)
                 ? payload?.queue.filter(
                     (item): item is string =>
