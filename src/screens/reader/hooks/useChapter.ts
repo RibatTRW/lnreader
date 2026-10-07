@@ -479,21 +479,24 @@ export default function useChapter(
     (percentage: number, chapterId?: number) => {
       const target =
         chapterId === undefined
-          ? chapter
+          ? chapterRef.current
           : documentChaptersRef.current.get(chapterId);
       // Unknown ids come from a document that has since been replaced.
-      if (incognitoMode || !target) {
+      if (!target) {
         return;
       }
       const progress = percentage > 100 ? 100 : percentage;
-      updateChapterProgress(target.id, progress);
-      if (progress > (target.progress ?? 0)) {
-        const updated = { ...target, progress };
-        documentChaptersRef.current.set(updated.id, updated);
-        if (chapterRef.current.id === updated.id) {
-          chapterRef.current = updated;
-        }
+      // The latest position, even after scrolling back and in incognito mode:
+      // a rebuilt reader document restores where the reader actually is.
+      const updated = { ...target, progress };
+      documentChaptersRef.current.set(updated.id, updated);
+      if (chapterRef.current.id === updated.id) {
+        chapterRef.current = updated;
       }
+      if (incognitoMode) {
+        return;
+      }
+      updateChapterProgress(target.id, progress);
 
       // Progress is reported repeatedly while reading the end of a chapter;
       // marking it read (and pushing it to the tracker, which is a network
@@ -505,13 +508,7 @@ export default function useChapter(
         updateTracker(target.name);
       }
     },
-    [
-      chapter,
-      incognitoMode,
-      markChapterRead,
-      updateChapterProgress,
-      updateTracker,
-    ],
+    [incognitoMode, markChapterRead, updateChapterProgress, updateTracker],
   );
 
   /**
@@ -570,6 +567,19 @@ export default function useChapter(
     const active = chapterRef.current;
     const html = documentHtmlRef.current.get(active.id);
     return html === undefined ? undefined : { chapter: active, html };
+  }, []);
+
+  /**
+   * Forgets the chapters infinite scrolling has dropped from the reader
+   * document, so a long session does not keep every chapter it went through.
+   */
+  const dropChapters = useCallback((chapterIds: number[]) => {
+    for (const id of chapterIds) {
+      if (id !== chapterRef.current.id) {
+        documentChaptersRef.current.delete(id);
+        documentHtmlRef.current.delete(id);
+      }
+    }
   }, []);
 
   const hideHeader = useCallback(() => {
@@ -665,6 +675,7 @@ export default function useChapter(
       activateChapter,
       loadChapterAfter,
       getRebuildTarget,
+      dropChapters,
       hideHeader,
       navigateChapter,
       navigateChapterSearch,
@@ -689,6 +700,7 @@ export default function useChapter(
       activateChapter,
       loadChapterAfter,
       getRebuildTarget,
+      dropChapters,
       hideHeader,
       navigateChapter,
       navigateChapterSearch,
